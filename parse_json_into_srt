@@ -1,0 +1,42 @@
+#!/usr/bin/node
+var subtitle_ext = ".jason";
+var fs = require('fs');
+
+console.log( process.argv[2] );
+var file = fs.readFileSync( process.argv[2], "utf8");
+var json_subtitle = JSON.parse( file);
+var content = "\uFEFF";
+for( var i = 0; i < json_subtitle.captions.length; ++i)
+{
+	content += (i + 1);
+	content += "\r\n";
+	content += parse_time( parseInt( json_subtitle.captions[i].startTime));
+	content += " --> ";
+	content += parse_time( parseInt( json_subtitle.captions[i].startTime) + parseInt( json_subtitle.captions[i].duration));
+	content += "\r\n";
+	content += json_subtitle.captions[i].content;
+	content += "\r\n\r\n";
+}
+var srt_filename = process.argv[2].substring( 0, process.argv[2].length - subtitle_ext.length) + ".srt";
+console.log( srt_filename);
+fs.writeFile( srt_filename, content, "utf8");
+
+function parse_time( tick_count)
+{
+	this.millisecond = parseInt( tick_count) % 1000;
+	this.second = ( tick_count - this.millisecond) / 1000 % 60;
+	this.minute = (( tick_count - this.millisecond - this.second*1000) / 1000 / 60) % 60;
+	this.hour   = ( tick_count - this.millisecond - this.second*1000 - this.minute*1000*60) / 1000 / 60 / 60;
+	return  pad( this.hour, 2) + ":" + pad( this.minute, 2) + ":" + pad( this.second, 2) + "," + pad( this.millisecond, 3);
+}
+
+function pad( num, bits)
+{
+	var len = num.toString().length;
+	while( len < bits){
+		num = "0" + num;
+		len++;
+	}
+	return num;
+}
+
